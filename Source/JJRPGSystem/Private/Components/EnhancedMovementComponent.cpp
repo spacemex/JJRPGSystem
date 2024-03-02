@@ -3,7 +3,7 @@
 
 #include "Components/EnhancedMovementComponent.h"
 // Sets default values for this component's properties
-UEnhancedMovementComponent::UEnhancedMovementComponent(): DefaultMaxWalkSpeed(0)
+UEnhancedMovementComponent::UEnhancedMovementComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -13,7 +13,6 @@ UEnhancedMovementComponent::UEnhancedMovementComponent(): DefaultMaxWalkSpeed(0)
 	// ...
 }
 
-// this is a test
 
 // Called when the game starts
 void UEnhancedMovementComponent::BeginPlay()
