@@ -13,6 +13,7 @@ UEnhancedMovementComponent::UEnhancedMovementComponent(): DefaultMaxWalkSpeed(0)
 	// ...
 }
 
+// this is a test
 
 // Called when the game starts
 void UEnhancedMovementComponent::BeginPlay()
