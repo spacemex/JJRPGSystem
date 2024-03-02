@@ -31,7 +31,7 @@ public:
 
 private:
 
-	float DefaultMaxWalkSpeed;
+	float DefaultMaxWalkSpeed; // Saves The MaxWalkSpeed 
 	
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetMaxSprintVelocity", Getter = "GetMaxSprintVelocity"))
 	float MaxSprintVelocity = 700.0f;
