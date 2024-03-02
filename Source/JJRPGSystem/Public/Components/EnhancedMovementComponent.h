@@ -31,7 +31,8 @@ public:
 
 private:
 
-	float DefaultMaxWalkSpeed; // Saves The MaxWalkSpeed 
+	float DefaultMaxWalkSpeed = 0.0f; // Saves The MaxWalkSpeed
+	bool bCanUnCrouch = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetMaxSprintVelocity", Getter = "GetMaxSprintVelocity"))
 	float MaxSprintVelocity = 700.0f;
@@ -42,9 +43,17 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetCrouchedHalfHeight", Getter = "GetCrouchedHalfHeight"))
 	float CrouchedHalfHeight = 44.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching", meta = (Setter = "SetCanCrouch", Getter = "GetCanCrouch"))
+	bool bCanCrouch = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Sprinting")
+	bool bCanSprint = true;
+
+
 
 public:
-	
+
+	// Helpers 
 	UFUNCTION(BlueprintPure)
 	float GetDefaultWalkSpeed() const
 	{
@@ -79,6 +88,34 @@ public:
 			}
 		}
 	}
+
+	// Setters
+	UFUNCTION(BlueprintCallable)
+	void SetMaxSprintVelocity(float NewSprintSpeed){MaxSprintVelocity = NewSprintSpeed;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetCrouchVelocity(float NewCrouchSpeed){MaxCrouchVelocity = NewCrouchSpeed;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetCrouchedHalfHeight(float NewHalfHeight){CrouchedHalfHeight = NewHalfHeight;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetCanCrouch(bool NewCanCrouch){bCanCrouch = NewCanCrouch;}
+
+	//Getters
+	UFUNCTION(BlueprintPure)
+	float GetMaxSprintVelocity() const {return MaxSprintVelocity;}
+
+	UFUNCTION(BlueprintPure)
+	float GetMaxCrouchVelocity() const {return MaxCrouchVelocity;}
+
+	UFUNCTION(BlueprintPure)
+	float GetCrouchedHalfHeight() const {return CrouchedHalfHeight;}
+
+	UFUNCTION(BlueprintPure)
+	bool GetCanCrouch() const {return bCanCrouch;}
+	
+	
 };
 
 
