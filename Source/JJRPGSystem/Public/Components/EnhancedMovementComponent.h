@@ -27,29 +27,31 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
-
-
+	void UpdateCrouch();
 
 private:
 
 	FTimerHandle StartSprintHandle;
 	FTimerHandle StopSprintHandle;
 
-	float DefaultMaxWalkSpeed = 0.0f; // Saves The MaxWalkSpeed
-	
-	bool bCanUnCrouch = false;
+	float Alpha = 0.0f;
+	bool bCanUnCrouch = true;
 	bool bIsCrouching = false;
 	bool bIsSprinting = false;
+	bool bIsRegeneratingStamina = false;
+	bool bIsDrainingStamina = false;
 
 	//Movement
 	
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds")
+	float MaxWalkVelocity = 500.0f;
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetMaxSprintVelocity", Getter = "GetMaxSprintVelocity"))
 	float MaxSprintVelocity = 700.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetCrouchVelocity", Getter = "GetMaxCrouchVelocity"))
 	float MaxCrouchVelocity = 250.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetCrouchedHalfHeight", Getter = "GetCrouchedHalfHeight"))
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching",meta= (Setter = "SetCrouchedHalfHeight", Getter = "GetCrouchedHalfHeight"))
 	float CrouchedHalfHeight = 44.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching", meta = (Setter = "SetCanCrouch", Getter = "GetCanCrouch"))
@@ -61,29 +63,32 @@ private:
 	//Stamina
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Stamina", meta = (Setter = "SetMaxStamina", Getter = "GetMaxStamina"))
-	float MaxStamina = 100.0f; // Done
+	float MaxStamina = 100.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "EnahncedMovement|Stamina", meta = (Setter = "SetCurrentStamina", Getter = "GetCurrentStamina"))
-	float CurrentStamina = MaxStamina; // Done
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Stamina", meta = (Setter = "SetCurrentStamina", Getter = "GetCurrentStamina"))
+	float CurrentStamina = MaxStamina;
 
 	//Timer And Regeneration
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Regeneration",meta = (Setter = "SetCanRegenerateStamina", Getter = "GetCanRegenerateStamina"))
-	bool bCanRegenerateStamina = true; // Done
+	bool bCanRegenerateStamina = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Rates", meta = (Setter = "SetStaminaDrainRate", Getter = "GetStaminaDrainRate"))
-	float StaminaDrainRate = 1.0f; // Done
+	float StaminaDrainRate = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Rates", meta = (Setter = "SetStaminaRegenerationRate", Getter = "GetStaminaRegenerationRate"))
-	float StaminaRegenerationRate = 1.0f; // Done
+	float StaminaRegenerationRate = 1.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "EnahncedMovement|Delays", meta = (Setter = "SetStaminaDrainDelay", Getter = "GetStaminaDrainDelay"))
-	float StaminaDrainDelay = 1.0f; // Done
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Delays", meta = (Setter = "SetStaminaDrainDelay", Getter = "GetStaminaDrainDelay"))
+	float StaminaDrainDelay = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Delays", meta = (Setter = "SetStaminaRegenerationDelay", Getter = "GetStaminaRegenerationDelay"))
-	float StaminaRegenerationDelay = 1.0f; // Done
+	float StaminaRegenerationDelay = 1.0f;
 
-	
+	//Misc
+
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching")
+	float FullHalfHeight = 88.0f;
 
 
 
@@ -103,7 +108,7 @@ public:
 				}
 			}
 		}
-		return false;
+		return 0.0f;
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -123,6 +128,46 @@ public:
 				}
 			}
 		}
+	}
+
+	UFUNCTION(BlueprintPure)
+	float GetVelocity() const
+	{
+		if (const UWorld* World = GetWorld())
+		{
+			if (const ACharacter* Player = World->GetFirstPlayerController()->GetCharacter())
+			{
+				return Player->GetVelocity().Length();
+			}
+		}
+		UE_LOG(LogTemp,Error,TEXT("Failed To Get Velocity"))
+		return 0.0f;
+	}
+
+	/**
+	 * @brief Get The Players Facing Angle.
+	 * So, the resulting angle is the angle between the direction of the player's movement and the direction the player is facing,
+	 * in degrees. It will be 0 if the player is moving directly forward,
+	 * greater than 0 and less than 90 if the player is moving forward but at an angle,
+	 * 90 if the player is moving directly sideways, greater than 90 and less than 180 if the player is moving backwards at an angle,
+	 * and 180 if the player is moving directly backwards.
+	 */
+	UFUNCTION(BlueprintPure)
+	float GetMovementAngle() const
+	{
+		if (const UWorld* World = GetWorld())
+		{
+			if (const ACharacter* Player = World->GetFirstPlayerController()->GetCharacter())
+			{
+				const FVector VelocityDirection = Player->GetVelocity().GetSafeNormal();
+				const FVector FacingDirection = Player->GetActorForwardVector();
+				const float DotProduct = FVector::DotProduct(VelocityDirection,FacingDirection);
+				const float MovementAngle = FMath::Acos(DotProduct);
+				return FMath::RadiansToDegrees(MovementAngle);
+			}
+		}
+		UE_LOG(LogTemp,Error,TEXT("Failed To get Movement Angle"));
+		return 0.0f;
 	}
 
 	// Setters
@@ -158,6 +203,30 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetStaminaRegenerationDelay(float NewStaminaRegenerationDelay) {StaminaRegenerationDelay = NewStaminaRegenerationDelay;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsRegeneratingStamina(bool NewRegeneratingStamina) {bIsRegeneratingStamina = NewRegeneratingStamina;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsDrainingStamina(bool NewDrainingStamina) {bIsDrainingStamina = NewDrainingStamina;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetCanUnCrouch(bool NewCanUnCrouch) {bCanUnCrouch = NewCanUnCrouch;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetCanSprint(bool NewCanSprint) {bCanSprint = NewCanSprint;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsSprinting(bool NewIsSprinting) {bIsSprinting = NewIsSprinting;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetMaxWalkVelocity(float NewMaxWalkVelocity) {MaxWalkVelocity = NewMaxWalkVelocity;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsCrouching(bool NewIsCrouching) {bIsCrouching = NewIsCrouching;}
+
+	UFUNCTION(BlueprintCallable)
+	void SetFullHalfHeight(float NewHalfHeight) {FullHalfHeight = NewHalfHeight;}
 	
 
 
@@ -203,27 +272,53 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetStaminaRegenerationDelay() const {return StaminaRegenerationDelay;}
 
+	UFUNCTION(BlueprintPure)
+	bool GetIsRegeneratingStamina() const {return bIsRegeneratingStamina;}
+
+	UFUNCTION(BlueprintPure)
+	bool GetIsDrainingStamina() const {return bIsDrainingStamina;}
+
+	UFUNCTION(BlueprintPure)
+	bool GetCanUnCrouch() const {return bCanUnCrouch;}
+
+	UFUNCTION(BlueprintPure)
+	bool GetCanSprint() const {return bCanSprint;}
+
+	UFUNCTION(BlueprintPure)
+	float GetMaxWalkVelocity() const {return MaxWalkVelocity;}
+
+	UFUNCTION(BlueprintPure)
+	float GetFullHalfHeight() const {return FullHalfHeight;}
+	
+
+
 	
 
 	//Utility
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void StartSprint();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void StopSprint();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void StartCrouch();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void EndCrouch();
 
-	UFUNCTION()
-	void StartStaminaDrain();
+	UFUNCTION(BlueprintNativeEvent)
+	void StaminaDrain(); // Event
 
-	UFUNCTION()
-	void StartStaminaRegeneration();
+	UFUNCTION(BlueprintNativeEvent)
+	void StaminaRegeneration(); // Event
+
+	UFUNCTION(BlueprintNativeEvent)
+	void DrainStaminaTimer(); // Timer
+
+	UFUNCTION(BlueprintNativeEvent)
+	void RegenerateStaminaTimer(); // Timer
 
 	
 	
