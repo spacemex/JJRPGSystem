@@ -242,7 +242,7 @@ void UEnhancedMovementComponent::EndCrouch_Implementation() {
 
 void UEnhancedMovementComponent::UpdateCrouch() {
     if (const UWorld* World = GetWorld()) {
-        Alpha += 0.07f; // Controls the speed of transition, adjust as needed
+        Alpha += 0.03f; // Controls the speed of transition, adjust as needed
 
         if (ACharacter* Player = World->GetFirstPlayerController()->GetCharacter()) {
             if(GetIsCrouching()) {
