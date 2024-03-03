@@ -33,3 +33,19 @@ void UEnhancedMovementComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	// ...
 }
 
+void UEnhancedMovementComponent::EndCrouch_Implementation()
+{
+}
+
+void UEnhancedMovementComponent::StartCrouch_Implementation()
+{
+}
+
+void UEnhancedMovementComponent::StopSprint_Implementation()
+{
+}
+
+void UEnhancedMovementComponent::StartSprint_Implementation()
+{
+}
+
