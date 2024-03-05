@@ -22,8 +22,14 @@ void UEnhancedMovementComponent::BeginPlay()
 	SetDefaultWalkSpeed(GetMaxWalkVelocity());
 	GetWorld()->GetFirstPlayerController()->GetCharacter()->GetCapsuleComponent()->SetCapsuleHalfHeight(GetFullHalfHeight());
 	// ...
+
+
+
+	//TEST
 	
 }
+
+
 
 // Called every frame
 void UEnhancedMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -31,8 +37,28 @@ void UEnhancedMovementComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	UpdateCrouch();
+	//UpdateCrouch();
 	// ...
+}
+
+void UEnhancedMovementComponent::HandleProgress()
+{
+	ElapsedTime = FMath::Min(TimelineLengthInSeconds, ElapsedTime + 0.01f);
+	const float LerpValue = FMath::Lerp(OriginalCapsuleHalfHeight, TargetCapsuleHalfHeight, ElapsedTime/TimelineLengthInSeconds);
+	AdjustCapsuleHalfHeight(LerpValue);
+	
+	if (ElapsedTime >= TimelineLengthInSeconds)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CrouchTimerHandle);
+	}
+}
+
+void UEnhancedMovementComponent::AdjustCapsuleHalfHeight(float NewHalfHeight)
+{
+	if (const ACharacter* Character = Cast<ACharacter>(GetOwner())) 
+	{
+		Character->GetCapsuleComponent()->SetCapsuleHalfHeight(NewHalfHeight);
+	}
 }
 
 void UEnhancedMovementComponent::DrainStaminaTimer_Implementation()
@@ -99,70 +125,55 @@ void UEnhancedMovementComponent::StaminaDrain_Implementation()
 	}
 }
 
-//void UEnhancedMovementComponent::EndCrouch_Implementation()
-//{
-	//if (GetIsCrouching())
-	//{
-		//if (GetCanUnCrouch())
-		//{
-			//if (const UWorld* World = GetWorld())
-			//{
-				//if (const ACharacter* Player = World->GetFirstPlayerController()->GetCharacter())
-				//{
-					//SetCanSprint(true);
+void UEnhancedMovementComponent::EndCrouch_Implementation()
+{
+	if (GetIsCrouching())
+	{
+		if (GetCanUnCrouch())
+		{
+			if (GetIsSprinting())
+			{
+				SetDefaultWalkSpeed(MaxSprintVelocity);
+				SetCanSprint(true);
+			}
+			const UWorld* World = GetWorld();
+			const ACharacter* Character = World->GetFirstPlayerController()->GetCharacter();
 
-					//const float InterpSpeed = 0.01;
-					//Alpha -= InterpSpeed;
-					//Alpha = FMath::Clamp(Alpha - 0.1,0.0f,1.0f);
+			OriginalCapsuleHalfHeight = Character->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+			TargetCapsuleHalfHeight = GetFullHalfHeight();
+			ElapsedTime = 0.0f;
 
+			World->GetTimerManager().SetTimer(CrouchTimerHandle, this, &UEnhancedMovementComponent::HandleProgress, 0.01f, true);
 
+			SetDefaultWalkSpeed(MaxWalkVelocity);
+			SetIsCrouching(false);
+			SetCanSprint(true);
+		}
+	}
+}
 
-					//const float NewHeight = FMath::(GetCrouchedHalfHeight(),GetFullHalfHeight(),1 - Alpha);
-					//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("New Height: %f"), NewHeight));
+void UEnhancedMovementComponent::StartCrouch_Implementation()
+{
+	if (GetCanCrouch())
+	{
+		if (GetIsSprinting())
+		{
+			StopSprint();
+		}
+		const UWorld* World = GetWorld();
+		const ACharacter* Character = World->GetFirstPlayerController()->GetCharacter();
 
-					//Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
+		OriginalCapsuleHalfHeight= Character->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+		TargetCapsuleHalfHeight = GetCrouchedHalfHeight();
+		ElapsedTime = 0.0f;
 
-					//if (Alpha <= 0.0f)
-					//{
-						//SetIsCrouching(false);
-
-					//}
-				//}
-			//}
-		//}
-	//}
-
-//}
-
-//void UEnhancedMovementComponent::StartCrouch_Implementation()
-//{
-	//if (GetCanCrouch())
-	//{
-		//if (GetIsSprinting())
-		//{
-		//	StopSprint();
-		//}
-		//if (const UWorld* World = GetWorld())
-		//{
-			//if (const ACharacter* Player = World->GetFirstPlayerController()->GetCharacter())
-			//{
-				//SetIsCrouching(true);
-				//SetCanSprint(false);
-
-				//const float InterpSpeed = 0.01;
-
-				//Alpha += InterpSpeed;
-
-				//Alpha = FMath::Clamp(Alpha,0.0f,1.0f);
-
-				//const float NewHeight = FMath::SmoothStep(GetFullHalfHeight(),GetCrouchedHalfHeight(),Alpha);
-				//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("New Height: %f"), NewHeight));
-				
-				//Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
-			//}
-		//}
-	//}
-//}
+		World->GetTimerManager().SetTimer(CrouchTimerHandle, this, &UEnhancedMovementComponent::HandleProgress, 0.01f, true);
+		
+		SetDefaultWalkSpeed(GetMaxCrouchVelocity());
+		SetIsCrouching(true);
+		SetCanSprint(false);
+	}
+}
 
 void UEnhancedMovementComponent::StopSprint_Implementation()
 {
@@ -177,6 +188,7 @@ void UEnhancedMovementComponent::StopSprint_Implementation()
 				SetIsDrainingStamina(true);
 				SetDefaultWalkSpeed(GetMaxWalkVelocity());
 				RegenerateStaminaTimer();
+				SetCanSprint(true);
 			}
 		}
 	}
@@ -191,7 +203,7 @@ void UEnhancedMovementComponent::StartSprint_Implementation()
 			EndCrouch();
 		}
 	}
-	if (GetCanSprint())
+	if (GetCanSprint() && !GetIsCrouching())
 	{
 		if (GetVelocity() > 10.0f)
 		{
@@ -205,6 +217,7 @@ void UEnhancedMovementComponent::StartSprint_Implementation()
 						{
 							SetIsSprinting(true);
 							SetCanCrouch(false);
+							SetCanSprint(false);
 							SetDefaultWalkSpeed(GetMaxSprintVelocity());
 							DrainStaminaTimer();
 						}
@@ -213,46 +226,4 @@ void UEnhancedMovementComponent::StartSprint_Implementation()
 			}
 		}	
 	}
-	
-}
-
-float EaseInExpo(float Alpha) {
-    return pow(2, 10 * (Alpha - 1));
-}
-
-float EaseOutExpo(float Alpha) {
-    return (-pow(2, -10 * Alpha) + 1);
-}
-
-void UEnhancedMovementComponent::StartCrouch_Implementation() {
-    if (!GetIsCrouching() && GetCanCrouch()) {    
-        SetIsCrouching(true);
-        SetCanSprint(false);
-        Alpha = 0.0f; // Reset Alpha
-    }
-}
-
-void UEnhancedMovementComponent::EndCrouch_Implementation() {
-    if (GetIsCrouching() && GetCanUnCrouch()) {
-        SetIsCrouching(false);
-        SetCanSprint(true);
-        Alpha = -1.0f; // Reset Alpha
-    }
-}
-
-void UEnhancedMovementComponent::UpdateCrouch() {
-    if (const UWorld* World = GetWorld()) {
-        Alpha += 0.03f; // Controls the speed of transition, adjust as needed
-
-        if (ACharacter* Player = World->GetFirstPlayerController()->GetCharacter()) {
-            if(GetIsCrouching()) {
-                float newHeight = FMath::Lerp(GetFullHalfHeight(), GetCrouchedHalfHeight(), EaseInExpo(Alpha));
-                Player->GetCapsuleComponent()->SetCapsuleHalfHeight(newHeight);
-            } 
-            else {
-                float newHeight = FMath::Lerp(GetCrouchedHalfHeight(), GetFullHalfHeight(), EaseOutExpo(Alpha));
-                Player->GetCapsuleComponent()->SetCapsuleHalfHeight(newHeight);
-            }
-        }
-    }
 }
