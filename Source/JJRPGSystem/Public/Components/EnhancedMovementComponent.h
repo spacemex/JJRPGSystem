@@ -27,14 +27,25 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
-	void UpdateCrouch();
 
 private:
+	// TEST
+
+
+
+	float ElapsedTime;
+
+	FTimerHandle CrouchTimerHandle;
+
+	void HandleProgress();
+	void AdjustCapsuleHalfHeight(float NewHalfHeight);
+
+
+	//END TEST
 
 	FTimerHandle StartSprintHandle;
 	FTimerHandle StopSprintHandle;
 
-	float Alpha = 0.0f;
 	bool bCanUnCrouch = true;
 	bool bIsCrouching = false;
 	bool bIsSprinting = false;
@@ -56,6 +67,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching", meta = (Setter = "SetCanCrouch", Getter = "GetCanCrouch"))
 	bool bCanCrouch = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching", meta = (Setter = "SetFullHalfHeight", Getter = "GetFullHalfHeight"))
+	float FullHalfHeight = 88.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Sprinting")
 	bool bCanSprint = true;
@@ -87,8 +101,12 @@ private:
 
 	//Misc
 
-	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching")
-	float FullHalfHeight = 88.0f;
+	float TargetCapsuleHalfHeight = CrouchedHalfHeight ;
+
+	float OriginalCapsuleHalfHeight = FullHalfHeight;
+
+	UPROPERTY(EditDefaultsOnly,Category = "EnhnacedMovement")
+	float TimelineLengthInSeconds = 0.3f;
 
 
 
