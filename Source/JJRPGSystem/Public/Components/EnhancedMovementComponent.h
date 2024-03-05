@@ -10,7 +10,7 @@
 #include "EnhancedMovementComponent.generated.h"
 
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent,Blueprintable,BlueprintType))
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent),Blueprintable,BlueprintType)
 class JJRPGSYSTEM_API UEnhancedMovementComponent : public UActorComponent
 {
 	GENERATED_BODY()
