@@ -107,7 +107,6 @@ bool UInventorySystem::AddItem_Implementation(ABasePickupItem* ItemPickup,FName 
 	}
 	if (true) // If The Item Was Added Successfully We Update Our Weight 
 	{
-		// TODO: Call Update Weight
 		
 		UpdateWeight(RowName);
 	}
