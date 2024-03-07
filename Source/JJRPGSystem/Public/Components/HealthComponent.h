@@ -158,7 +158,7 @@ public:
 	 * Damages The Armor Before Applying LeftOver Damage To The Health.
 	 * @param AfflictedDamage Amount Of Damage To Deal To The Target.
 	 */
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void AfflictDamage(float AfflictedDamage);
 
 	/**
@@ -167,27 +167,27 @@ public:
 	 * @param HealthToAdd Amount Of Health To Add To The Player.
 	 * @param ArmorToAdd  Amount Of Armor To Add To The Player.
 	 */
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void AddHealthAndArmor(float HealthToAdd, float ArmorToAdd);
 
 	/**
 	 * Damages The Players Armor If Any Exists.
 	 * @param Damage  Amount Of Damage To Inflect.
 	 */
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void DamageArmor( float Damage);
 
 	/**
 	 * Damages The Players Health And Ignores Armor.
 	 * @param Damage Amount Of Damage To Inflect.
 	 */
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void DamageHealth(float Damage);
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void RegenerateArmorEvent();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
 	void RegenerateHealthEvent();
 
 	UFUNCTION(BlueprintNativeEvent)
