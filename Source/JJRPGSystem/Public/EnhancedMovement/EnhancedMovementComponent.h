@@ -46,7 +46,7 @@ private:
 	FTimerHandle StartSprintHandle;
 	FTimerHandle StopSprintHandle;
 
-	bool bCanUnCrouch = true;
+	bool bCanUnCrouch = false;// TODO Later :tm:
 	bool bIsCrouching = false;
 	bool bIsSprinting = false;
 	bool bIsRegeneratingStamina = false;
@@ -54,7 +54,7 @@ private:
 
 	//Movement
 	
-	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds")
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta = (Setter = "SetMaxWalkVelocity", Getter = "GetMaxWalkVelocity"))
 	float MaxWalkVelocity = 500.0f;
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Speeds",meta= (Setter = "SetMaxSprintVelocity", Getter = "GetMaxSprintVelocity"))
 	float MaxSprintVelocity = 700.0f;
@@ -71,7 +71,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Crouching", meta = (Setter = "SetFullHalfHeight", Getter = "GetFullHalfHeight"))
 	float FullHalfHeight = 88.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Sprinting")
+	UPROPERTY(EditDefaultsOnly, Category = "EnhancedMovement|Sprinting",meta = (Setter = "SetCanSprint", Getter = "GetCanSprint"))
 	bool bCanSprint = true;
 
 	//Stamina
