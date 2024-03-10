@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Components/EnhancedMovementComponent.h"
+#include "EnhancedMovement/EnhancedMovementComponent.h"
 
 #include "Components/CapsuleComponent.h"
 // Sets default values for this component's properties
@@ -25,7 +25,6 @@ void UEnhancedMovementComponent::BeginPlay()
 
 
 
-	//TEST
 	
 }
 
